@@ -12,7 +12,7 @@ use serde::{de::DeserializeOwned, Deserialize, Serialize};
 /// Call a Move script
 #[derive(Clone, Debug, Hash, Eq, PartialEq, Serialize, Deserialize)]
 pub struct ScriptCall {
-    #[serde(with = "serde_bytes")]
+    //#[serde(with = "serde_bytes")]
     pub code: Vec<u8>,
     pub ty_args: Vec<TypeTag>,
     //TOOD custom serialize
@@ -110,5 +110,11 @@ impl MoveOSTransaction {
             action,
             tx_hash,
         }
+    }
+}
+
+mod tests {
+    fn testDecodeMoveAction() {
+        let testData = "0x0295b15595f939a8cf5ece25d44fc832ac07636f756e74657208696e6372656173650000";
     }
 }

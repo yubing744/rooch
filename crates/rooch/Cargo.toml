@@ -30,7 +30,8 @@ async-trait = { workspace = true }
 codespan-reporting = { workspace = true }
 termcolor = { workspace = true }
 itertools = { workspace = true }
-
+serde-reflection = { workspace = true }
+serde-generate = { workspace = true }
 
 move-bytecode-utils = { workspace = true }
 move-binary-format = { workspace = true }
