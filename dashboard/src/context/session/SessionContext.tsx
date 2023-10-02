@@ -10,6 +10,7 @@ import { AccountDataType } from 'src/context/auth/types'
 
 // ** Rooch SDK
 import {
+  Chain,
   bcsTypes,
   IAccount,
   IProvider,
@@ -40,14 +41,18 @@ const SessionContext = createContext<Session>({
   requestAuthorize: undefined,
 })
 
-const makeSessionAccountStoreKey = (address: string) => {
-  return `rooch::dashboard::account::${address}::current-session-key`
+const makeSessionAccountStoreKey = (chain: Chain, address: string) => {
+  return `rooch::${chain.id}::dashboard::account::${address}::current-session-key`
 }
 
-const loadSessionAccountFromSessionStorage = (provider: IProvider, roochAddress: string) => {
+const loadSessionAccountFromSessionStorage = (
+  chain: Chain,
+  provider: IProvider,
+  roochAddress: string,
+) => {
   try {
     // Get from local storage by key
-    const secretKey = window.sessionStorage.getItem(makeSessionAccountStoreKey(roochAddress))
+    const secretKey = window.sessionStorage.getItem(makeSessionAccountStoreKey(chain, roochAddress))
 
     if (secretKey) {
       let sk = bcsTypes.fromB64(secretKey)
@@ -70,9 +75,9 @@ const loadSessionAccountFromSessionStorage = (provider: IProvider, roochAddress:
   return null
 }
 
-const clearSessionAccountInSessionStorage = (roochAddress: string) => {
+const clearSessionAccountInSessionStorage = (chain: Chain, roochAddress: string) => {
   try {
-    window.sessionStorage.setItem(makeSessionAccountStoreKey(roochAddress), '')
+    window.sessionStorage.setItem(makeSessionAccountStoreKey(chain, roochAddress), '')
   } catch (error) {
     // If error also return initialValue
     console.log(error)
@@ -106,7 +111,7 @@ const SessionProvider = ({ children }: Props) => {
 
           const defaultAccount = auth.defaultAccount
           if (defaultAccount) {
-            clearSessionAccountInSessionStorage(defaultAccount.roochAddress)
+            clearSessionAccountInSessionStorage(rooch.getActiveChina(), defaultAccount.roochAddress)
           }
         }
 
@@ -115,13 +120,14 @@ const SessionProvider = ({ children }: Props) => {
     }
 
     return new FilteredProvider(rooch.provider!, [new FuncFilter(sessionKeyInvalidFilterFunc)])
-  }, [rooch.provider, auth.defaultAccount])
+  }, [rooch, auth.defaultAccount])
 
   const [sessionAccount, setSessionAccount] = useState<IAccount | null>(() => {
     const defaultAccount = auth.defaultAccount
 
     if (defaultAccount) {
       const sessionAccount = loadSessionAccountFromSessionStorage(
+        rooch.getActiveChina(),
         filterdProvider,
         defaultAccount.roochAddress,
       )
@@ -137,6 +143,7 @@ const SessionProvider = ({ children }: Props) => {
 
     if (defaultAccount) {
       const sessionAccount = loadSessionAccountFromSessionStorage(
+        rooch.getActiveChina(),
         filterdProvider,
         defaultAccount.roochAddress,
       )
@@ -145,7 +152,7 @@ const SessionProvider = ({ children }: Props) => {
         setSessionAccount(sessionAccount)
       }
     }
-  }, [auth.defaultAccount, filterdProvider])
+  }, [rooch, auth.defaultAccount, filterdProvider])
 
   const waitTxConfirmed = async (ethereum: any, txHash: string) => {
     let receipt
@@ -241,6 +248,7 @@ const SessionProvider = ({ children }: Props) => {
   }
 
   const requestWalletCreateSessionKey = async (
+    chain: Chain,
     provider: IProvider,
     account: AccountDataType,
     scope: Array<string>,
@@ -258,7 +266,7 @@ const SessionProvider = ({ children }: Props) => {
         maxInactiveInterval,
       )
 
-      const key = makeSessionAccountStoreKey(account.roochAddress)
+      const key = makeSessionAccountStoreKey(chain, account.roochAddress)
       window.sessionStorage.setItem(key, pk.export().privateKey)
       const authorizer = new PrivateKeyAuth(pk)
 
@@ -271,6 +279,7 @@ const SessionProvider = ({ children }: Props) => {
   }
 
   const requestPrivateCreateSessionKey = async (
+    chain: Chain,
     provider: IProvider,
     account: IAccount,
     scope: Array<string>,
@@ -282,7 +291,7 @@ const SessionProvider = ({ children }: Props) => {
     try {
       await account.registerSessionKey(roochAddress, scope, maxInactiveInterval)
 
-      const key = makeSessionAccountStoreKey(account.getAddress())
+      const key = makeSessionAccountStoreKey(chain, account.getAddress())
       window.sessionStorage.setItem(key, pk.export().privateKey)
       const authorizer = new PrivateKeyAuth(pk)
 
@@ -312,6 +321,7 @@ const SessionProvider = ({ children }: Props) => {
           const account = new Account(rooch.provider!, roochAddress, authorizer)
 
           const sessionAccount = await requestPrivateCreateSessionKey(
+            rooch.getActiveChina(),
             filterdProvider,
             account,
             scope,
@@ -323,6 +333,7 @@ const SessionProvider = ({ children }: Props) => {
           }
         } else if (defaultAccount.type === 'ETH') {
           const sessionAccount = await requestWalletCreateSessionKey(
+            rooch.getActiveChina(),
             filterdProvider,
             defaultAccount,
             scope,
