@@ -2,6 +2,7 @@ pragma circom 2.0.0;
 
 include "@rooch/circomlib/circuits/string.circom";
 include "@rooch/circomlib/circuits/jwt.circom";
+include "@rooch/circomlib/circuits/base64.circom";
 
 template ZKLoginVerify(jwt_max_bytes) {
   signal input oauth_jwt[jwt_max_bytes];
@@ -22,7 +23,11 @@ template ZKLoginVerify(jwt_max_bytes) {
   signal jwt_header[jwt_max_bytes] <== splitBy.out[0];
   signal jwt_payload[jwt_max_bytes] <== splitBy.out[1];
 
-  // TODO Extract user ID and nonce from JWT
+  // Extract user ID and nonce from JWT
+  component base64Decode = Base64Decode(jwt_max_bytes);
+  base64Decode.in <== jwt_payload;
+  signal payload[jwt_max_bytes] <== base64Decode.out;
+
   // TODO Verify if the nonce is correct
   // TODO generate rooch_address
 
