@@ -36,6 +36,7 @@ describe('ZKLogin Test', () => {
       const pubKeyData = pki.publicKeyFromPem(publicKeyPem.toString())
       const pubkeyBigInt = BigInt(pubKeyData.n.toString())
 
+      const startTime = new Date().getTime()
       const witness = await circuit.calculateWitness({
         oauth_jwt: padString(
           'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0',
@@ -46,6 +47,7 @@ describe('ZKLogin Test', () => {
         sequence_number: BigInt(0),
         salt: BigInt(0),
       })
+      console.log('proof time:', new Date().getTime() - startTime, 'ms')
 
       await circuit.checkConstraints(witness)
       await circuit.assertOut(witness, {

@@ -31,20 +31,20 @@ template ZKLoginVerify(jwt_max_bytes) {
   signal payload[jwt_max_bytes] <== base64Decode.out;
 
   // Extract sub from payload, "sub":" ==> 34 115 117 98 34 58 34 0
-  signal subChars[8];
-  subChars[0] <== 34;
-  subChars[1] <== 115;
-  subChars[2] <== 117;
-  subChars[3] <== 98;
-  subChars[4] <== 34;
-  subChars[5] <== 58;
-  subChars[6] <== 34;
-  subChars[7] <== 0;
+  signal subStartChars[8];
+  subStartChars[0] <== 34;
+  subStartChars[1] <== 115;
+  subStartChars[2] <== 117;
+  subStartChars[3] <== 98;
+  subStartChars[4] <== 34;
+  subStartChars[5] <== 58;
+  subStartChars[6] <== 34;
+  subStartChars[7] <== 0;
 
   component extractSubComp = Extract(jwt_max_bytes, 8, 16);
   extractSubComp.text <== payload;
-  extractSubComp.start_chars <== subChars;
-  extractSubComp.end_char <== 34;
+  extractSubComp.start_chars <== subStartChars;
+  extractSubComp.end_char <== 34; // 34 is "
   extractSubComp.start_index <== 0;
 
   signal sub[16] <== extractSubComp.extracted_text;
@@ -56,4 +56,3 @@ template ZKLoginVerify(jwt_max_bytes) {
 
   rooch_address <== mimcHash.out;
 }
-
