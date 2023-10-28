@@ -5,7 +5,7 @@ import fs from 'fs'
 import path from 'path'
 import { pki } from 'node-forge'
 import { wasm as wasm_tester } from 'circom_tester'
-import { padString, toCircomBigIntBytes } from '../src'
+import { padString, toCircomBigIntBytes } from '@rooch/circomlib'
 
 describe('ZKLogin Test', () => {
   jest.setTimeout(10 * 60 * 1000) // 10 minutes
