@@ -24,12 +24,12 @@ template ZKLoginVerify(jwt_max_bytes) {
   signal jwt_header[jwt_max_bytes] <== splitBy.out[0];
   signal jwt_payload[jwt_max_bytes] <== splitBy.out[1];
 
-  // Extract user ID and nonce from JWT
+  // Base64 decode payload from JWT
   component base64Decode = Base64Decode(jwt_max_bytes);
   base64Decode.in <== jwt_payload;
   signal payload[jwt_max_bytes] <== base64Decode.out;
 
-  // find "sub":" ==> 34 115 117 98 34 58 34 0
+  // Extract sub from payload, "sub":" ==> 34 115 117 98 34 58 34 0
   signal subChars[8];
   subChars[0] <== 34;
   subChars[1] <== 115;
@@ -40,27 +40,13 @@ template ZKLoginVerify(jwt_max_bytes) {
   subChars[6] <== 34;
   subChars[7] <== 0;
 
-  component subStartIndex = IndexOfMultiple(jwt_max_bytes, 8);
-  subStartIndex.text <== payload;
-  subStartIndex.startIndex <== 0;
-  subStartIndex.targetChars <== subChars;
+  component extractSubComp = Extract(jwt_max_bytes, 8, 16);
+  extractSubComp.text <== payload;
+  extractSubComp.start_chars <== subChars;
+  extractSubComp.end_char <== 34;
+  extractSubComp.start_index <== 0;
 
-  signal testIndex1 <== subStartIndex.index;
-
-  // find "sub":"1234567890" end char "
-  component subEndIndex = IndexOf(jwt_max_bytes);
-  subEndIndex.text <== payload;
-  subEndIndex.startIndex <== testIndex1 + 7;
-  subEndIndex.targetChar <== 34;
-
-  signal testIndex2 <== subEndIndex.index;
-
-  component subText = SubString(jwt_max_bytes, 16);
-  subText.text <== payload;
-  subText.startIndex <== testIndex1 + 7;
-  subText.count <== testIndex2 - testIndex1 - 7;
-
-  userId <== subText.substring;
+  userId <== extractSubComp.extracted_text;
 
   // TODO Verify if the nonce is correct
   // TODO generate rooch_address
