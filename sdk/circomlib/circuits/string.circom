@@ -47,6 +47,34 @@ template IndexOf(str_max_len) {
   index <-- tmpIndex;
 }
 
+template IndexOfMultiple(str_max_len, chars_max_len) {
+  signal input text[str_max_len];
+  signal input startIndex;
+  signal input targetChars[chars_max_len];
+  signal output index;
+
+  assert(startIndex >= 0 && startIndex < str_max_len);
+  assert(chars_max_len > 0 && chars_max_len <= str_max_len);
+
+  component len = Len(chars_max_len);
+  len.text <== targetChars;
+  signal chars_len <== len.length;
+
+  var tmpIndex = -1;
+  var matchCount = 0;
+
+  for (var i = 0; i <= str_max_len - chars_len && tmpIndex == -1; i++) {
+    matchCount = 0;
+
+    for (var j = 0; j < chars_len; j++) {
+      matchCount = (i >= startIndex && (text[i + j] == targetChars[j]) ? (matchCount + 1) : 0);
+      tmpIndex = tmpIndex == -1 ? (matchCount == chars_len ? i : -1) : tmpIndex;
+    }
+  }
+
+  index <-- tmpIndex;
+}
+
 template SubString(str_max_len, sub_str_len) {
   signal input text[str_max_len];
   signal input startIndex;

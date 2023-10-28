@@ -116,6 +116,39 @@ describe('String Test', () => {
     })
   })
 
+  describe('IndexOfMultiple', () => {
+    beforeAll(async () => {
+      circuit = await wasm_tester(path.join(__dirname, './string-indexof-multiple-test.circom'), {
+        // @dev During development recompile can be set to false if you are only making changes in the tests.
+        // This will save time by not recompiling the circuit every time.
+        // Compile: circom "./tests/email-verifier-test.circom" --r1cs --wasm --sym --c --wat --output "./tests/compiled-test-circuit"
+        recompile: true,
+        output: path.join(__dirname, './compiled-test-circuit'),
+        include: path.join(__dirname, '../node_modules'),
+      })
+    })
+
+    it('should IndexOfMultiple with startIndex zero be ok', async function () {
+      const inputs = [
+        [padString('ABCDEFG', 256), padString('ABCD', 16), 0],
+        [padString('ABCDEFG', 256), padString('BCD', 16), 1],
+        [padString('ABCDEFG', 256), padString('CD', 16), 2],
+        [padString('ABCDEFG', 256), padString('D', 16), 3],
+        [padString('ABCDEFG', 256), padString('HJK', 16), Felt.NEGATIVE_ONE],
+      ]
+
+      for (const [text, targetChars, output] of inputs) {
+        const witness = await circuit.calculateWitness({
+          text,
+          startIndex: 0,
+          targetChars,
+        })
+        await circuit.checkConstraints(witness)
+        await circuit.assertOut(witness, { index: output })
+      }
+    })
+  })
+
   describe('SubString', () => {
     beforeAll(async () => {
       circuit = await wasm_tester(path.join(__dirname, './string-substring-test.circom'), {
