@@ -49,6 +49,7 @@ describe('ZKLogin Test', () => {
       await circuit.checkConstraints(witness)
       await circuit.assertOut(witness, {
         rooch_address: BigInt(0),
+        userId: padString('1234567890', 16),
       })
     })
   })

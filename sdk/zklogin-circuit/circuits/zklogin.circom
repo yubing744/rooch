@@ -9,6 +9,7 @@ template ZKLoginVerify(jwt_max_bytes) {
   signal input oauth_signature[17];
   signal input oauth_pubKey[17];
   signal input sequence_number;
+  signal output userId[16];
   signal output rooch_address;
 
   // JWT Verify
@@ -27,6 +28,39 @@ template ZKLoginVerify(jwt_max_bytes) {
   component base64Decode = Base64Decode(jwt_max_bytes);
   base64Decode.in <== jwt_payload;
   signal payload[jwt_max_bytes] <== base64Decode.out;
+
+  // find "sub":" ==> 34 115 117 98 34 58 34 0
+  signal subChars[8];
+  subChars[0] <== 34;
+  subChars[1] <== 115;
+  subChars[2] <== 117;
+  subChars[3] <== 98;
+  subChars[4] <== 34;
+  subChars[5] <== 58;
+  subChars[6] <== 34;
+  subChars[7] <== 0;
+
+  component subStartIndex = IndexOfMultiple(jwt_max_bytes, 8);
+  subStartIndex.text <== payload;
+  subStartIndex.startIndex <== 0;
+  subStartIndex.targetChars <== subChars;
+
+  signal testIndex1 <== subStartIndex.index;
+
+  // find "sub":"1234567890" end char "
+  component subEndIndex = IndexOf(jwt_max_bytes);
+  subEndIndex.text <== payload;
+  subEndIndex.startIndex <== testIndex1 + 7;
+  subEndIndex.targetChar <== 34;
+
+  signal testIndex2 <== subEndIndex.index;
+
+  component subText = SubString(jwt_max_bytes, 16);
+  subText.text <== payload;
+  subText.startIndex <== testIndex1 + 7;
+  subText.count <== testIndex2 - testIndex1 - 7;
+
+  userId <== subText.substring;
 
   // TODO Verify if the nonce is correct
   // TODO generate rooch_address

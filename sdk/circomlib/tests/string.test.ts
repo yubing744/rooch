@@ -273,4 +273,61 @@ describe('String Test', () => {
       }
     })
   })
+
+  describe('Extract', () => {
+    beforeAll(async () => {
+      circuit = await wasm_tester(path.join(__dirname, './string-extract-test.circom'), {
+        // @dev During development recompile can be set to false if you are only making changes in the tests.
+        // This will save time by not recompiling the circuit every time.
+        // Compile: circom "./tests/email-verifier-test.circom" --r1cs --wasm --sym --c --wat --output "./tests/compiled-test-circuit"
+        recompile: true,
+        output: path.join(__dirname, './compiled-test-circuit'),
+        include: path.join(__dirname, '../node_modules'),
+      })
+    })
+
+    it('should extract be ok', async function () {
+      const inputs = [
+        [
+          padString('{"sub":"1234567890","name":"John Doe","admin":true,"iat":1516239022}', 128),
+          padString('"sub":"', 16),
+          34,
+          0,
+          padString('1234567890', 16),
+        ],
+        [
+          padString('{"sub":"1234567890","name":"John Doe","admin":true,"iat":1516239022}', 128),
+          padString('"name":"', 16),
+          34,
+          0,
+          padString('John Doe', 16),
+        ],
+        [
+          padString('{"sub":"1234567890","name":"John Doe","admin":true,"iat":1516239022}', 128),
+          padString('"admin":', 16),
+          44,
+          20,
+          padString('true', 16),
+        ],
+        [
+          padString('{"sub":"1234567890","name":"John Doe","admin":true,"iat":1516239022}', 128),
+          padString('"iat":', 16),
+          125,
+          30,
+          padString('1516239022', 16),
+        ],
+      ]
+
+      for (const [text, start_chars, end_char, start_index, output] of inputs) {
+        const witness = await circuit.calculateWitness({
+          text,
+          start_chars,
+          end_char,
+          start_index,
+        })
+        await circuit.checkConstraints(witness)
+        await circuit.assertOut(witness, { extracted_text: output })
+      }
+    })
+  })
 })

@@ -172,3 +172,46 @@ template Concat3(str_max_len1, str_max_len2, str_max_len3) {
     out[i] <-- i < len1.length ? text1[i] : (i < len1.length + len2.length ? text2[i - len1.length] : (i < len1.length + len2.length + len3.length ? text3[i - len1.length - len2.length] : 0));
   }
 }
+
+template Extract(str_max_len, start_chars_max_len, output_max_len) {
+  signal input text[str_max_len];
+  signal input start_chars[start_chars_max_len];
+  signal input end_char;
+  signal input start_index;
+  signal output extracted_text[output_max_len];
+
+  assert(start_index >= 0 && start_index < str_max_len);
+  assert(output_max_len > 0);
+
+  // Obtain length of start_chars
+  component startCharsLength = Len(start_chars_max_len);
+  startCharsLength.text <== start_chars;
+  signal start_chars_len <== startCharsLength.length;
+
+  // Locate startIndex for substring extraction
+  component findStartIndexComp = IndexOfMultiple(str_max_len, start_chars_max_len);
+  findStartIndexComp.text <== text;
+  findStartIndexComp.startIndex <== start_index;
+  findStartIndexComp.targetChars <== start_chars;
+  signal locatedStartIndex <== findStartIndexComp.index;
+
+  // Locate endIndex for substring extraction
+  component findEndIndexComp = IndexOf(str_max_len);
+  findEndIndexComp.text <== text;
+  findEndIndexComp.startIndex <== locatedStartIndex + start_chars_len;
+  findEndIndexComp.targetChar <== end_char;
+
+  signal locatedEndIndex <== findEndIndexComp.index;
+
+  // Ensure valid indexes and prevent negative count
+  assert(locatedStartIndex >= 0 && locatedEndIndex > locatedStartIndex + start_chars_len);
+
+  // Extract substring
+  component extractSubString = SubString(str_max_len, output_max_len);
+  extractSubString.text <== text;
+  extractSubString.startIndex <== locatedStartIndex + start_chars_len;
+  extractSubString.count <== locatedEndIndex - locatedStartIndex - start_chars_len;
+
+  extracted_text <== extractSubString.substring;
+}
+
