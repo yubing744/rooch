@@ -44,12 +44,14 @@ describe('ZKLogin Test', () => {
         oauth_signature: toCircomBigIntBytes(signatureBigInt),
         oauth_pubKey: toCircomBigIntBytes(pubkeyBigInt),
         sequence_number: BigInt(0),
+        salt: BigInt(0),
       })
 
       await circuit.checkConstraints(witness)
       await circuit.assertOut(witness, {
-        rooch_address: BigInt(0),
-        userId: padString('1234567890', 16),
+        rooch_address: BigInt(
+          '14171039412213110784417280324141189816472958262483829095867395698730945491308',
+        ),
       })
     })
   })

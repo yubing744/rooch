@@ -1,5 +1,6 @@
 pragma circom 2.0.0;
 
+include "circomlib/circuits/mimc.circom";
 include "@rooch/circomlib/circuits/string.circom";
 include "@rooch/circomlib/circuits/jwt.circom";
 include "@rooch/circomlib/circuits/base64.circom";
@@ -9,7 +10,7 @@ template ZKLoginVerify(jwt_max_bytes) {
   signal input oauth_signature[17];
   signal input oauth_pubKey[17];
   signal input sequence_number;
-  signal output userId[16];
+  signal input salt;
   signal output rooch_address;
 
   // JWT Verify
@@ -46,11 +47,13 @@ template ZKLoginVerify(jwt_max_bytes) {
   extractSubComp.end_char <== 34;
   extractSubComp.start_index <== 0;
 
-  userId <== extractSubComp.extracted_text;
+  signal sub[16] <== extractSubComp.extracted_text;
 
-  // TODO Verify if the nonce is correct
-  // TODO generate rooch_address
+  // Calc rooch address by mimcHash(sub, 16)
+  component mimcHash = MultiMiMC7(16, 2);
+  mimcHash.in <== sub;
+  mimcHash.k <== salt;
 
-  rooch_address <== sequence_number;
+  rooch_address <== mimcHash.out;
 }
 
