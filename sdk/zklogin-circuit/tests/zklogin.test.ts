@@ -27,33 +27,31 @@ describe('ZKLogin Test', () => {
     it('should ZKLoginVerify be ok', async function () {
       // signature
       const jwtSignature =
-        'NHVaYe26MbtOYhSKkoKYdFVomg4i8ZJd8_-RU8VNbftc4TSMb4bXP3l3YlNWACwyXPGffz5aXHc6lty1Y2t4SWRqGteragsVdZufDn5BlnJl9pdR_kdVFUsra2rWKEofkZeIC4yWytE58sMIihvo9H1ScmmVwBcQP6XETqYd0aSHp1gOa9RdUPDvoXQ5oqygTqVtxaDr6wUFKrKItgBMzWIdNZ6y7O9E0DhEPTbE9rfBo6KTFsHAZnMg4k68CDp2woYIaXbmYTWcvbzIuHO7_37GT79XdIwkm95QJ7hYC9RiwrV7mesbY4PAahERJawntho0my942XheVLmGwLMBkQ'
+        'cZN0cIM_0LEha7VM8rd06njkuGfp65g4tmDx4I414Gv5vDzr0B7iE2xkROLQEL6ikpTwSoX3oAXIa3nRZF400MNky-YkVk1-y8R-yfKss_DgufLCoIRGZCugE60wlzmLq4HJZis4wJa6nVufsXzIVKlSJn9tVx_t0uModyc3BqbDGnF2xpJg6opVc12NxsRoNL3EIojK9D56aYxYuj4m58vik1OOFuiIwNFgueo0YkT_sJZEaMbMYdqxZOlsPp6zklf0ortb0VBHpiPtDUUmFSvADDQ6W-MIFQW0tHawmo_5RvwfNvpjHXSVeNFPzIGKD-nHo7XOmOf0VOe2Iu69Ag'
       // eslint-disable-next-line prettier/prettier, no-restricted-globals
       const signatureBigInt = BigInt('0x' + Buffer.from(jwtSignature, 'base64').toString('hex'))
 
       // public key
-      const publicKeyPem = fs.readFileSync(path.join(__dirname, './keys/public_key.pem'), 'utf8')
+      const publicKeyPem = fs.readFileSync(path.join(__dirname, './jwt/public_key.pem'), 'utf8')
       const pubKeyData = pki.publicKeyFromPem(publicKeyPem.toString())
       const pubkeyBigInt = BigInt(pubKeyData.n.toString())
 
       const startTime = new Date().getTime()
       const witness = await circuit.calculateWitness({
         oauth_jwt: padString(
-          'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0',
+          'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhdWQiOiI1NzU1MTkyMDAwMDAtbXNvcDllcDQ1dTJ1bzk4aGFwcW1uZ3Y4ZDgwMDAwMDAuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJub25jZSI6IjB4MDEiLCJzdWIiOiIxMTA0NjM0NTIxNjczMDMwMDAwMDAifQ',
           512,
         ),
         oauth_signature: toCircomBigIntBytes(signatureBigInt),
         oauth_pubKey: toCircomBigIntBytes(pubkeyBigInt),
-        sequence_number: BigInt(0),
-        salt: BigInt(0),
+        kc_name: padString('sub', 12),
       })
       console.log('proof time:', new Date().getTime() - startTime, 'ms')
 
       await circuit.checkConstraints(witness)
       await circuit.assertOut(witness, {
-        rooch_address: BigInt(
-          '14171039412213110784417280324141189816472958262483829095867395698730945491308',
-        ),
+        nonce: padString('0x01', 32),
+        kc_value: padString('110463452167303000000', 32),
       })
     })
   })

@@ -40,7 +40,7 @@ template IndexOf(str_max_len) {
 
   var tmpIndex = -1;
 
-  for (var i = 0; i < str_max_len; i++) {
+  for (var i = 0; i < str_max_len && tmpIndex == -1; i++) {
     tmpIndex = tmpIndex + (i >= startIndex && tmpIndex == -1 && (text[i] == targetChar) ? (i + 1) : 0);
   }
 

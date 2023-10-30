@@ -9,9 +9,9 @@ template ZKLoginVerify(jwt_max_bytes) {
   signal input oauth_jwt[jwt_max_bytes];
   signal input oauth_signature[17];
   signal input oauth_pubKey[17];
-  signal input sequence_number;
-  signal input salt;
-  signal output rooch_address;
+  signal input kc_name[12];
+  signal output kc_value[32];
+  signal output nonce[32];
 
   // JWT Verify
   component jwtVerify = JWTVerify(jwt_max_bytes, 121, 17); // 46 is '.'
@@ -30,29 +30,40 @@ template ZKLoginVerify(jwt_max_bytes) {
   base64Decode.in <== jwt_payload;
   signal payload[jwt_max_bytes] <== base64Decode.out;
 
-  // Extract sub from payload, "sub":" ==> 34 115 117 98 34 58 34 0
-  signal subStartChars[8];
-  subStartChars[0] <== 34;
-  subStartChars[1] <== 115;
-  subStartChars[2] <== 117;
-  subStartChars[3] <== 98;
-  subStartChars[4] <== 34;
-  subStartChars[5] <== 58;
-  subStartChars[6] <== 34;
-  subStartChars[7] <== 0;
+  // Extract nonce from payload, "nonce":" ==> 34 110 111 110 99 101 34 58 34 0
+  signal nonceStartChars[10];
+  nonceStartChars[0] <== 34;
+  nonceStartChars[1] <== 110;
+  nonceStartChars[2] <== 111;
+  nonceStartChars[3] <== 110;
+  nonceStartChars[4] <== 99;
+  nonceStartChars[5] <== 101;
+  nonceStartChars[6] <== 34;
+  nonceStartChars[7] <== 58;
+  nonceStartChars[8] <== 34;
+  nonceStartChars[9] <== 0;
 
-  component extractSubComp = Extract(jwt_max_bytes, 8, 16);
+  component extractNonceComp = Extract(jwt_max_bytes, 10, 32);
+  extractNonceComp.text <== payload;
+  extractNonceComp.start_chars <== nonceStartChars;
+  extractNonceComp.end_char <== 34; // 34 is "
+  extractNonceComp.start_index <== 0;
+
+  nonce <== extractNonceComp.extracted_text;
+
+  // Extract kc_name from payload, like sub、email
+  component kcConcat3Comp = Concat3(1, 12, 3);
+  kcConcat3Comp.text1[0] <== 34; // 34 is "
+  kcConcat3Comp.text2 <== kc_name;   
+  kcConcat3Comp.text3[0] <== 34; // 34 is "
+  kcConcat3Comp.text3[1] <== 58; // 34 is :
+  kcConcat3Comp.text3[2] <== 34; // 34 is "
+
+  component extractSubComp = Extract(jwt_max_bytes, 16, 32);
   extractSubComp.text <== payload;
-  extractSubComp.start_chars <== subStartChars;
+  extractSubComp.start_chars <== kcConcat3Comp.out;
   extractSubComp.end_char <== 34; // 34 is "
   extractSubComp.start_index <== 0;
 
-  signal sub[16] <== extractSubComp.extracted_text;
-
-  // Calc rooch address by mimcHash(sub, 16)
-  component mimcHash = MultiMiMC7(16, 2);
-  mimcHash.in <== sub;
-  mimcHash.k <== salt;
-
-  rooch_address <== mimcHash.out;
+  kc_value <== extractSubComp.extracted_text;
 }
