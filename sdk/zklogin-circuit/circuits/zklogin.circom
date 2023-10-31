@@ -1,6 +1,5 @@
 pragma circom 2.0.0;
 
-include "circomlib/circuits/mimc.circom";
 include "@rooch/circomlib/circuits/string.circom";
 include "@rooch/circomlib/circuits/jwt.circom";
 include "@rooch/circomlib/circuits/base64.circom";

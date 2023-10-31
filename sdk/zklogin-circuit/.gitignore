@@ -24,3 +24,6 @@ yarn-error.log
 
 # tests 
 tests/compiled-test-circuit
+
+target
+
