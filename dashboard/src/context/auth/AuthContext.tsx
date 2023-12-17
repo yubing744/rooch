@@ -162,6 +162,12 @@ const AuthProvider = ({ children }: Props) => {
             name: WalletType.Metamask,
           })
           break
+        case WalletType.Bitcoin:
+          result.push({
+            enable: true,
+            name: WalletType.Bitcoin,
+          })
+          break
         default:
           result.push({
             enable: false,
