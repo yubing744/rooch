@@ -54,6 +54,12 @@ module bitcoin_move::ord {
         object_id: ObjectID,
     }
 
+    struct MetaprotocolValidity has key, store, copy, drop {
+        protocol_type: String,
+        is_valid: bool,
+        invalid_reason: Option<String>,
+    }
+
     struct Inscription has key{
         txid: address,
         index: u32,
@@ -69,6 +75,9 @@ module bitcoin_move::ord {
         metaprotocol: Option<String>,
         parent: Option<ObjectID>,
         pointer: Option<u64>,
+
+        // Metaprotocol validity
+        metaprotocol_validity: Option<MetaprotocolValidity>
     }
 
     struct InscriptionRecord has store, copy, drop {
@@ -89,6 +98,8 @@ module bitcoin_move::ord {
         input_index: u64,
         record: InscriptionRecord,
     }
+
+
 
     struct InscriptionStore has key{
         inscriptions: TableVec<InscriptionID>,
@@ -151,6 +162,7 @@ module bitcoin_move::ord {
             metaprotocol: record.metaprotocol,
             parent,
             pointer: record.pointer,
+            metaprotocol_validity: option::none(),
         }
     }
 
@@ -490,6 +502,7 @@ module bitcoin_move::ord {
             metaprotocol: _,
             parent: _,
             pointer: _,
+            metaprotocol_validity: _,
         } = self;
     }
 
@@ -626,6 +639,55 @@ module bitcoin_move::ord {
                 address_mapping::bind_by_system(&bitcoin_move_signer, rooch_address, maddress);
             };
         };
+    }
+
+    // ==== Inscription Metaprotocol Validity ==== //
+
+    // Seal the metaprotocol validity for the given inscription_id.
+    #[private_generics(T)]
+    public fun seal_metaprotocol_validity<T>(inscription_id: InscriptionID, is_valid: bool, invalid_reason: Option<String>) {
+        let store_obj_id = object::named_object_id<InscriptionStore>();
+        let store_obj = object::borrow_mut_object_shared<InscriptionStore>(store_obj_id);
+
+        let inscription_object_id = derive_inscription_id(inscription_id);
+        let inscription_obj = object::borrow_mut_object_field<InscriptionStore, Inscription>(store_obj, inscription_object_id);
+        let inscription = object::borrow_mut(inscription_obj);
+
+        let protocol_type = type_info::type_name<T>();
+        let validity = MetaprotocolValidity {
+            protocol_type,
+            is_valid,
+            invalid_reason,
+        };
+
+        inscription.metaprotocol_validity = option::some(validity);
+    }
+
+    // Borrow the metaprotocol validity for the given inscription_id.
+    public fun borrow_metaprotocol_validity(inscription_id: InscriptionID): Option<MetaprotocolValidity> {
+        let store_obj_id = object::named_object_id<InscriptionStore>();
+        let store_obj = object::borrow_mut_object_shared<InscriptionStore>(store_obj_id);
+
+        let inscription_object_id = derive_inscription_id(inscription_id);
+        let inscription_obj = object::borrow_mut_object_field<InscriptionStore, Inscription>(store_obj, inscription_object_id);
+        let inscription = object::borrow(inscription_obj);
+
+        inscription.metaprotocol_validity
+    }
+
+    /// Get the MetaprotocolValidity's protocol_type
+    public fun metaprotocol_validity_protocol_type(validity: &MetaprotocolValidity): String {
+        validity.protocol_type
+    }
+
+    /// Get the MetaprotocolValidity's is_valid
+    public fun metaprotocol_validity_is_valid(validity: &MetaprotocolValidity): bool {
+        validity.is_valid
+    }
+
+    /// Get the MetaprotocolValidity's invalid_reason
+    public fun metaprotocol_validity_invalid_reason(validity: &MetaprotocolValidity): Option<String> {
+        validity.invalid_reason
     }
 
     // ===== permenent area ========== //
@@ -903,6 +965,5 @@ module bitcoin_move::ord {
         let inscription_obj = object::borrow_object<Inscription>(object_id);
         assert!(!contains_temp_state<TempState>(inscription_obj), 1);
         assert!(contains_permanent_state<PermanentState>(inscription_obj), 2);
-
     }
 }

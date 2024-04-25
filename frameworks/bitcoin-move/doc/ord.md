@@ -8,6 +8,7 @@
 -  [Struct `InscriptionID`](#0x4_ord_InscriptionID)
 -  [Struct `Flotsam`](#0x4_ord_Flotsam)
 -  [Struct `SatPoint`](#0x4_ord_SatPoint)
+-  [Resource `MetaprotocolValidity`](#0x4_ord_MetaprotocolValidity)
 -  [Resource `Inscription`](#0x4_ord_Inscription)
 -  [Struct `InscriptionRecord`](#0x4_ord_InscriptionRecord)
 -  [Struct `InvalidInscriptionEvent`](#0x4_ord_InvalidInscriptionEvent)
@@ -43,6 +44,11 @@
 -  [Function `from_transaction_bytes`](#0x4_ord_from_transaction_bytes)
 -  [Function `subsidy_by_height`](#0x4_ord_subsidy_by_height)
 -  [Function `bind_multichain_address`](#0x4_ord_bind_multichain_address)
+-  [Function `seal_metaprotocol_validity`](#0x4_ord_seal_metaprotocol_validity)
+-  [Function `borrow_metaprotocol_validity`](#0x4_ord_borrow_metaprotocol_validity)
+-  [Function `metaprotocol_validity_protocol_type`](#0x4_ord_metaprotocol_validity_protocol_type)
+-  [Function `metaprotocol_validity_is_valid`](#0x4_ord_metaprotocol_validity_is_valid)
+-  [Function `metaprotocol_validity_invalid_reason`](#0x4_ord_metaprotocol_validity_invalid_reason)
 -  [Function `add_permanent_state`](#0x4_ord_add_permanent_state)
 -  [Function `contains_permanent_state`](#0x4_ord_contains_permanent_state)
 -  [Function `borrow_permanent_state`](#0x4_ord_borrow_permanent_state)
@@ -106,6 +112,17 @@
 
 
 <pre><code><b>struct</b> <a href="ord.md#0x4_ord_SatPoint">SatPoint</a> <b>has</b> <b>copy</b>, drop, store
+</code></pre>
+
+
+
+<a name="0x4_ord_MetaprotocolValidity"></a>
+
+## Resource `MetaprotocolValidity`
+
+
+
+<pre><code><b>struct</b> <a href="ord.md#0x4_ord_MetaprotocolValidity">MetaprotocolValidity</a> <b>has</b> <b>copy</b>, drop, store, key
 </code></pre>
 
 
@@ -536,6 +553,65 @@ Block Rewards
 
 
 <pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="ord.md#0x4_ord_bind_multichain_address">bind_multichain_address</a>(rooch_address: <b>address</b>, bitcoin_address_opt: <a href="_Option">option::Option</a>&lt;<a href="_BitcoinAddress">bitcoin_address::BitcoinAddress</a>&gt;)
+</code></pre>
+
+
+
+<a name="0x4_ord_seal_metaprotocol_validity"></a>
+
+## Function `seal_metaprotocol_validity`
+
+
+
+<pre><code>#[private_generics(#[T])]
+<b>public</b> <b>fun</b> <a href="ord.md#0x4_ord_seal_metaprotocol_validity">seal_metaprotocol_validity</a>&lt;T&gt;(inscription_id: <a href="ord.md#0x4_ord_InscriptionID">ord::InscriptionID</a>, is_valid: bool, invalid_reason: <a href="_Option">option::Option</a>&lt;<a href="_String">string::String</a>&gt;)
+</code></pre>
+
+
+
+<a name="0x4_ord_borrow_metaprotocol_validity"></a>
+
+## Function `borrow_metaprotocol_validity`
+
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="ord.md#0x4_ord_borrow_metaprotocol_validity">borrow_metaprotocol_validity</a>(inscription_id: <a href="ord.md#0x4_ord_InscriptionID">ord::InscriptionID</a>): <a href="_Option">option::Option</a>&lt;<a href="ord.md#0x4_ord_MetaprotocolValidity">ord::MetaprotocolValidity</a>&gt;
+</code></pre>
+
+
+
+<a name="0x4_ord_metaprotocol_validity_protocol_type"></a>
+
+## Function `metaprotocol_validity_protocol_type`
+
+Get the MetaprotocolValidity's protocol_type
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="ord.md#0x4_ord_metaprotocol_validity_protocol_type">metaprotocol_validity_protocol_type</a>(validity: &<a href="ord.md#0x4_ord_MetaprotocolValidity">ord::MetaprotocolValidity</a>): <a href="_String">string::String</a>
+</code></pre>
+
+
+
+<a name="0x4_ord_metaprotocol_validity_is_valid"></a>
+
+## Function `metaprotocol_validity_is_valid`
+
+Get the MetaprotocolValidity's is_valid
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="ord.md#0x4_ord_metaprotocol_validity_is_valid">metaprotocol_validity_is_valid</a>(validity: &<a href="ord.md#0x4_ord_MetaprotocolValidity">ord::MetaprotocolValidity</a>): bool
+</code></pre>
+
+
+
+<a name="0x4_ord_metaprotocol_validity_invalid_reason"></a>
+
+## Function `metaprotocol_validity_invalid_reason`
+
+Get the MetaprotocolValidity's invalid_reason
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="ord.md#0x4_ord_metaprotocol_validity_invalid_reason">metaprotocol_validity_invalid_reason</a>(validity: &<a href="ord.md#0x4_ord_MetaprotocolValidity">ord::MetaprotocolValidity</a>): <a href="_Option">option::Option</a>&lt;<a href="_String">string::String</a>&gt;
 </code></pre>
 
 
